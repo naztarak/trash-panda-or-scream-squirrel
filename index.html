@@ -154,6 +154,54 @@
     button:hover {
       opacity: 0.9;
     }
+  /* Mobile responsive adjustments */
+    @media (max-width: 600px) {
+      body {
+        padding: 12px;
+      }
+
+      .card {
+        padding: 24px 16px;
+      }
+
+      h1 {
+        font-size: 1.6rem;
+      }
+
+      .subtitle {
+        font-size: 1rem;
+        margin-bottom: 28px;
+      }
+
+      .pole {
+        width: 110px;
+      }
+
+      .pole-icon img {
+        height: 52px;
+      }
+
+      .pole-name {
+        font-size: 1.1rem;
+      }
+
+      .status-readout {
+        font-size: 1.2rem;
+        margin-bottom: 24px;
+      }
+
+      /* Stack the dropdown, number input, and button vertically */
+      .input-row {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      select, input, button {
+        width: 100%;
+        font-size: 1.1rem;
+        padding: 12px;
+      }
+    }
   </style>
 </head>
 <body>

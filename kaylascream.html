@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kayla Scale: Raccoon to Opossum Tracker</title>
+<style>
+    :root {
+      --bg: #121417;
+      --card-bg: #1c2026;
+      --text: #e6edf3;
+      --subtext: #8b949e;
+      --accent: #58a6ff;
+      --track: #2d333b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid #30363d;
+      border-radius: 24px;
+      padding: 48px;
+      max-width: 840px;
+      width: 100%;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.25rem;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--subtext);
+      font-size: 1.35rem;
+      margin-bottom: 48px;
+    }
+
+    .poles {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 20px;
+    }
+
+    .pole {
+      text-align: center;
+      width: 165px;
+    }
+
+    .pole-icon img {
+      height: 72px;
+      width: auto;
+      display: block;
+      margin: 0 auto 8px auto;
+      object-fit: contain;
+    }
+
+    .pole-name {
+      font-weight: 600;
+      font-size: 1.4rem;
+    }
+
+    .track-container {
+      position: relative;
+      height: 30px;
+      background: var(--track);
+      border-radius: 15px;
+      margin-bottom: 45px;
+    }
+
+    .indicator {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 48px;
+      height: 48px;
+      background: var(--text);
+      border: 6px solid var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 16px rgba(88, 166, 255, 0.4);
+      transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .status-readout {
+      text-align: center;
+      font-weight: 600;
+      font-size: 1.6rem;
+      margin-bottom: 40px;
+      color: var(--accent);
+      min-height: 2rem;
+    }
+
+    .controls {
+      border-top: 1px solid #30363d;
+      padding-top: 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 15px;
+    }
+
+    select, input, button {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      color: var(--text);
+      padding: 15px 21px;
+      border-radius: 12px;
+      font-size: 1.4rem;
+    }
+
+    select {
+      flex: 1.2;
+      cursor: pointer;
+    }
+
+    input[type="number"] {
+      flex: 1;
+      text-align: center;
+    }
+
+    button {
+      background: var(--accent);
+      color: #0d1117;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Kayla Scale</h1>
+  <p class="subtitle">Live Metamorphosis Tracker</p>
+
+<div class="poles">
+    <div class="pole">
+      <span class="pole-icon">
+        <img src="jimothy.png" alt="Raccoon" />
+      </span>
+      <span class="pole-name">Raccoon</span>
+    </div>
+    <div class="pole">
+      <span class="pole-icon">
+        <img src="kaylascream.png" alt="Opossum" />
+      </span>
+      <span class="pole-name">Opossum</span>
+    </div>
+  </div>
+
+  <div class="track-container">
+    <div class="indicator" id="indicator"></div>
+  </div>
+
+  <div class="status-readout" id="status">Connecting to tracker...</div>
+
+  <div class="controls">
+    <div class="input-row">
+      <select id="targetChoice">
+        <option value="raccoon">Leaning Raccoon</option>
+        <option value="opossum">Leaning Opossum</option>
+      </select>
+      <input type="number" id="pctInput" min="0" max="100" placeholder="% (0-100)" />
+      <button id="submitBtn">Update</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+  // Pre-configured with your Firebase keys from your console
+  const firebaseConfig = {
+    apiKey: "AIzaSyDNzuayGG-3m-XT6pI16Up_6QhFwAwE4ZA",
+    authDomain: "trash-panda-to-scream-sq-c6c44.firebaseapp.com",
+    databaseURL: "https://trash-panda-to-scream-squirrel-default-rtdb.firebaseio.com",
+    projectId: "trash-panda-to-scream-sq-c6c44",
+    storageBucket: "trash-panda-to-scream-sq-c6c44.firebasestorage.app",
+    messagingSenderId: "606073111325",
+    appId: "1:606073111325:web:8c2ac9d4235a4e11b2d7f4",
+    measurementId: "G-15WXNE53NM"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const statusRef = ref(db, "tracker/currentPosition");
+
+  const indicator = document.getElementById("indicator");
+  const statusText = document.getElementById("status");
+  const targetChoice = document.getElementById("targetChoice");
+  const pctInput = document.getElementById("pctInput");
+  const submitBtn = document.getElementById("submitBtn");
+
+  function renderPosition(position) {
+    indicator.style.left = `${position}%`;
+
+    if (position === 50) {
+      statusText.textContent = "Equally 50% Raccoon & 50% Opossum";
+    } else if (position < 50) {
+      const raccoonPct = Math.round(100 - (position * 2));
+      statusText.textContent = `${raccoonPct}% Raccoon`;
+    } else {
+      const opossumPct = Math.round((position - 50) * 2);
+      statusText.textContent = `${opossumPct}% Opossum`;
+    }
+  }
+
+  // Sync real-time updates to all connected visitors
+  onValue(statusRef, (snapshot) => {
+    const val = snapshot.val();
+    const currentVal = val !== null ? val : 50;
+    renderPosition(currentVal);
+  });
+
+  // Write new position to database on click
+  submitBtn.addEventListener("click", () => {
+    const pct = parseFloat(pctInput.value);
+    if (isNaN(pct) || pct < 0 || pct > 100) {
+      alert("Please enter a valid percentage between 0 and 100.");
+      return;
+    }
+
+    let absolutePosition;
+    if (targetChoice.value === "raccoon") {
+      absolutePosition = 50 - (pct / 2);
+    } else {
+      absolutePosition = 50 + (pct / 2);
+    }
+
+    set(statusRef, absolutePosition);
+    pctInput.value = "";
+  });
+</script>
+
+</body>
+</html>
